@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { getAuth, createUserWithEmailAndPassword, AuthError, UserCredential } from 'firebase/auth';
 import { app } from '../firebase';
-import { Box, Text, Input, Stack, Button, Image, Link } from '@chakra-ui/react';
+import { Box, Text, Input, Stack, Button, Image, Link, Heading } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 
 const Signup = () => {
@@ -41,9 +41,10 @@ const Signup = () => {
         display="flex"
         flexDirection="column"
         alignItems="center"
-        paddingTop="100px"
+        paddingTop="50px"
         
       >
+        <Heading color="white" paddingBottom="20px">BLOGIFY</Heading>
         <form onSubmit={handleSignUp}>
           <Stack>
             <Input
