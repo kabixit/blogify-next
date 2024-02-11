@@ -20,7 +20,7 @@ const NavBar = () => {
       height="15%"
     >
       <Flex align="center">
-        <Link fontSize="xl" fontWeight="bold" color="white" mt="14px" onClick={() => router.push('/Home')}>
+        <Link fontSize="xl" fontWeight="bold" color="white" mt="14px" onClick={() => router.push('/MainPage')}>
           BLOGIFY
         </Link>
         <Spacer />

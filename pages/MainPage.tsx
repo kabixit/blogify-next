@@ -5,30 +5,35 @@ import { db } from '../firebase'; // Import the Firestore database configuration
 import { collection, getDocs } from 'firebase/firestore';
 import { useRouter } from 'next/router';
 
-const MainPage = () => {
-  const [blogs, setBlogs] = useState([]);
+interface Blog {
+  id: string;
+  title: string;
+  imageUrl: string;
+  likesCount: number;
+}
+
+const MainPage: React.FC = () => {
+  const [blogs, setBlogs] = useState<Blog[]>([]);
   const router = useRouter();
 
   useEffect(() => {
-    // Fetch blog data from Firestore
     const fetchData = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, 'blogs'));
         const blogData = querySnapshot.docs.map((doc) => ({
           id: doc.id,
-          ...doc.data(),
-        }));
+          ...(doc.data() as Omit<Blog, 'id'>), // Ensure correct typing for document data
+        })) as Blog[]; // Cast the data to the Blog type
         setBlogs(blogData);
       } catch (error) {
-        console.error('Error fetching blogs:', error.message);
+        console.error('Error fetching blogs:', (error as Error).message);
       }
     };
     fetchData();
   }, []);
 
-  // Function to handle box click
-  const handleBoxClick = (blogId) => {
-    router.push(`/blog/${blogId}`); // Assuming the route for Blog page is '/blog/[id]'
+  const handleBoxClick = (blogId: string) => {
+    router.push(`/blog/${blogId}`);
   };
 
   return (
@@ -39,7 +44,6 @@ const MainPage = () => {
           Latest Blog Posts
         </Heading>
         <Grid templateColumns="repeat(auto-fill, minmax(200px, 1fr))" gap={4}>
-          {/* Map over the blogs array and render each blog post */}
           {blogs.map((blog) => (
             <Box
               key={blog.id}
@@ -50,11 +54,16 @@ const MainPage = () => {
               borderRadius="md"
               boxShadow="lg"
               overflow="hidden"
-              onClick={() => handleBoxClick(blog.id)} // Add onClick event handler
-              cursor="pointer" // Add cursor pointer to indicate clickable
+              onClick={() => handleBoxClick(blog.id)}
+              cursor="pointer"
             >
               <Image src={blog.imageUrl} alt={blog.title} mb={2} />
-              <Text fontWeight="bold" color="white" mt={2}>{blog.title}</Text>
+              <Text fontWeight="bold" color="white" mt={2}>
+                {blog.title}
+              </Text>
+              <Text color="gray.300" mt={1}>
+                Likes: {blog.likesCount}
+              </Text>
             </Box>
           ))}
         </Grid>

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Heading, Input, Textarea, Button, useToast } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase'; // Import the Firestore database configuration
@@ -13,6 +14,19 @@ const CreateBlog = () => {
   const [previewImage, setPreviewImage] = useState(null); // State to hold the preview image
   const router = useRouter();
   const toast = useToast();
+  const [userEmail, setUserEmail] = useState(null); // State to hold user email
+
+  useEffect(() => {
+    // Check if user is logged in
+    const auth = getAuth();
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUserEmail(user.email);
+      } else {
+        setUserEmail(null);
+      }
+    });
+  }, []);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -24,7 +38,7 @@ const CreateBlog = () => {
   };
 
   const handleCreateBlog = async () => {
-    if (!title || !content || !selectedImage) {
+    if (!title || !content || !selectedImage || !userEmail) {
       toast({
         title: 'Error',
         description: 'Please fill in all fields and select an image.',
@@ -42,12 +56,14 @@ const CreateBlog = () => {
       await uploadBytes(storageRef, selectedImage);
       const downloadURL = await getDownloadURL(storageRef);
 
-      // Add blog post to Firestore
+      // Add blog post to Firestore with owner email
       await addDoc(collection(db, 'blogs'), {
         title,
         content,
         imageUrl: downloadURL,
         timestamp: serverTimestamp(),
+        ownerId: userEmail, // Add owner email
+        likesCount: 0,
       });
 
       toast({
@@ -59,7 +75,7 @@ const CreateBlog = () => {
       });
 
       // Redirect to home page
-      router.push('/');
+      router.push('/MainPage');
     } catch (error) {
       console.error('Error uploading image:', error.message);
       toast({
