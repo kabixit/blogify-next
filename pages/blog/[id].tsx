@@ -1,39 +1,57 @@
+import React, { useState, useEffect } from 'react';
 import { Box, Heading, Text, Button, useToast, Input } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
-import { getDoc, doc, updateDoc, getFirestore, collection, where, query, getDocs, addDoc } from 'firebase/firestore';
+import {
+  getDoc,
+  doc,
+  updateDoc,
+  collection,
+  where,
+  query,
+  getDocs,
+  addDoc,
+} from 'firebase/firestore';
 import { db } from '../../firebase'; // Import Firestore instance
 import { auth } from '../../firebase'; // Import Firebase auth instance
 import NavBar from '../components/NavBar';
+import { User } from 'firebase/auth';
+
+interface BlogData {
+  title: string;
+  content: string;
+  imageUrl: string;
+  likesCount: number;
+}
+
+interface Comment {
+  comment: string;
+  userId: string;
+}
 
 const BlogPage = () => {
   const router = useRouter();
   const { id } = router.query; // Retrieve the blog post ID from query params
   const toast = useToast();
 
-  const [currentUser, setCurrentUser] = useState(null); // State to store the current user
-  const [hasLiked, setHasLiked] = useState(false); // State to track if the current user has liked the post
-  const [comment, setComment] = useState(''); // State to store the user's comment
-  const [comments, setComments] = useState([]); // State to store the comments for the blog post
-
-  // State to store blog post data
-  const [postData, setPostData] = useState({
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [hasLiked, setHasLiked] = useState<boolean>(false);
+  const [comment, setComment] = useState<string>('');
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [postData, setPostData] = useState<BlogData>({
     title: '',
     content: '',
     imageUrl: '',
-    likesCount: 0, // Add a state for likes count
+    likesCount: 0,
   });
 
   useEffect(() => {
-    // Fetch blog post data from Firestore
     const fetchData = async () => {
       try {
-        const docRef = doc(db, 'blogs', id); // Reference to the blog document
-        const docSnap = await getDoc(docRef); // Get the document snapshot
-
+        const docRef = doc(db, 'blogs', id as string);
+        const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          const data = docSnap.data(); // Extract blog post data from the document
-          setPostData(data); // Update the state with blog post data
+          const data = docSnap.data() as BlogData;
+          setPostData(data);
         } else {
           console.error('Blog post not found');
         }
@@ -43,17 +61,16 @@ const BlogPage = () => {
     };
 
     if (id) {
-      fetchData(); // Fetch data only if the blog post ID is available
+      fetchData();
     }
   }, [id]);
 
   useEffect(() => {
-    // Fetch comments for the current blog post
     const fetchComments = async () => {
       try {
         const q = query(collection(db, 'comments'), where('postId', '==', id));
         const querySnapshot = await getDocs(q);
-        const commentsData = querySnapshot.docs.map((doc) => doc.data());
+        const commentsData = querySnapshot.docs.map((doc) => doc.data() as Comment);
         setComments(commentsData);
       } catch (error) {
         console.error('Error fetching comments:', error);
@@ -61,16 +78,15 @@ const BlogPage = () => {
     };
 
     if (id) {
-      fetchComments(); // Fetch comments only if the blog post ID is available
+      fetchComments();
     }
   }, [id]);
 
   useEffect(() => {
-    // Check if user is authenticated and update currentUser state
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         setCurrentUser(user);
-        checkUserLiked(); // Check if the current user has already liked the post
+        checkUserLiked();
       } else {
         setCurrentUser(null);
       }
@@ -79,7 +95,6 @@ const BlogPage = () => {
     return () => unsubscribe();
   }, []);
 
-  // Function to check if the current user has already liked the post
   const checkUserLiked = async () => {
     if (currentUser) {
       const q = query(collection(db, 'likes'), where('postId', '==', id), where('userId', '==', currentUser.uid));
@@ -90,10 +105,8 @@ const BlogPage = () => {
     }
   };
 
-  // Function to handle liking the blog post
   const handleLike = async () => {
     if (!currentUser) {
-      // User is not authenticated
       toast({
         title: 'Authentication Required',
         description: 'You need to log in to like the blog post.',
@@ -105,7 +118,6 @@ const BlogPage = () => {
     }
 
     if (hasLiked) {
-      // User has already liked the post
       toast({
         title: 'Already Liked',
         description: 'You have already liked this blog post.',
@@ -117,13 +129,11 @@ const BlogPage = () => {
     }
 
     try {
-      // Update the likes count in Firestore
-      const docRef = doc(db, 'blogs', id);
+      const docRef = doc(db, 'blogs', id as string);
       await updateDoc(docRef, { likesCount: postData.likesCount + 1 });
       setPostData((prevData) => ({ ...prevData, likesCount: prevData.likesCount + 1 }));
 
-      // Record that the current user has liked the post
-      await addDoc(collection(db, 'likes'), { postId: id, userId: currentUser.uid });
+      await addDoc(collection(db, 'likes'), { postId: id, userId: currentUser!.uid });
 
       toast({
         title: 'Liked',
@@ -133,16 +143,14 @@ const BlogPage = () => {
         isClosable: true,
       });
 
-      setHasLiked(true); // Update hasLiked state
+      setHasLiked(true);
     } catch (error) {
       console.error('Error liking blog post:', error);
     }
   };
 
-  // Function to handle submitting a comment
   const handleSubmitComment = async () => {
     if (!currentUser) {
-      // User is not authenticated
       toast({
         title: 'Authentication Required',
         description: 'You need to log in to submit a comment.',
@@ -154,7 +162,6 @@ const BlogPage = () => {
     }
 
     if (!comment.trim()) {
-      // Comment is empty
       toast({
         title: 'Empty Comment',
         description: 'Please enter a comment before submitting.',
@@ -166,19 +173,16 @@ const BlogPage = () => {
     }
 
     try {
-      // Get the user's email from Firebase Authentication
       const user = auth.currentUser;
       const userEmail = user ? user.email : '';
 
-      // Add the comment to Firestore
       await addDoc(collection(db, 'comments'), {
         postId: id,
-        userId: userEmail, // Use the user's email as the userId
+        userId: userEmail,
         comment: comment.trim(),
         timestamp: new Date(),
       });
 
-      // Clear the comment input field
       setComment('');
 
       toast({
@@ -213,7 +217,6 @@ const BlogPage = () => {
           Like ({postData.likesCount})
         </Button>
 
-        {/* Comment Form */}
         {currentUser && (
           <>
             <Input
@@ -229,18 +232,17 @@ const BlogPage = () => {
           </>
         )}
 
-        {/* Display Comments */}
         <Box mt={4}>
-  <Heading size="md" color='white'>Comments</Heading>
-  {comments.map((comment, index) => (
-    <Box key={index} mt={4} p={4} borderRadius="md"  boxShadow="md">
-      <Text color="white">{comment.comment}</Text>
-      <Text fontSize="sm" color="gray.400" mt={2}>
-        {comment.userId}
-      </Text>
-    </Box>
-  ))}
-</Box>
+          <Heading size="md" color='white'>Comments</Heading>
+          {comments.map((comment, index) => (
+            <Box key={index} mt={4} p={4} borderRadius="md" boxShadow="md">
+              <Text color="white">{comment.comment}</Text>
+              <Text fontSize="sm" color="gray.400" mt={2}>
+                {comment.userId}
+              </Text>
+            </Box>
+          ))}
+        </Box>
       </Box>
     </>
   );

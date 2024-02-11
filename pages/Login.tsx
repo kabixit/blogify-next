@@ -10,7 +10,7 @@ const Login = () => {
   const [error, setError] = useState(null);
   const router = useRouter();
 
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const auth = getAuth(app);
     try {
@@ -18,7 +18,7 @@ const Login = () => {
       const user = userCredential.user;
       console.log('User logged in:', user);
       router.push('/MainPage'); // Navigate to the home page after successful login
-    } catch (error) {
+    } catch (error: any) {
       setError(error.message);
       console.error('Login error:', error.message);
     }

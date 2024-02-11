@@ -1,24 +1,24 @@
 import React, { useState } from 'react';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, AuthError, UserCredential } from 'firebase/auth';
 import { app } from '../firebase';
 import { Box, Text, Input, Stack, Button, Image, Link } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 
 const Signup = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [error, setError] = useState<string | null>(null); // Error state can be null or string
   const router = useRouter();
 
-  const handleSignUp = async (e) => {
+  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const auth = getAuth(app);
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       console.log('User signed up:', user);
       router.push('/MainPage'); // Navigate to the home page after successful login
-    } catch (error) {
+    } catch (error: any) { // Catch the specific error type from Firebase Auth
       setError(error.message);
       console.error('Signup error:', error.message);
     }
