@@ -17,7 +17,7 @@ const Login = () => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       console.log('User logged in:', user);
-      router.push('/MainPage'); // Navigate to the home page after successful login
+      router.push('/MainPage'); 
     } catch (error: any) {
       setError(error.message);
       console.error('Login error:', error.message);
