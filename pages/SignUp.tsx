@@ -7,7 +7,7 @@ import { useRouter } from 'next/router';
 const Signup = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  const [error, setError] = useState<string | null>(null); // Error state can be null or string
+  const [error, setError] = useState<string | null>(null); 
   const router = useRouter();
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
