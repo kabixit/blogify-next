@@ -10,7 +10,7 @@ import NavBar from './components/NavBar';
 const CreateBlog = () => {
   const [title, setTitle] = useState<string>('');
   const [content, setContent] = useState<string>('');
-  const [selectedImage, setSelectedImage] = useState<File | null>(null); // Specify File type
+  const [selectedImage, setSelectedImage] = useState<File | null>(null); 
   const [previewImage, setPreviewImage] = useState<string | null>(null); // Specify string type
   const router = useRouter();
   const toast = useToast();
