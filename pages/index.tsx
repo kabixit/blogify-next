@@ -14,7 +14,7 @@ const theme = extendTheme({
   styles: {
     global: (props: any) => ({
       body: {
-        bg: 'black', // Set the background color for the body
+        bg: 'black', 
       },
     }),
   },
