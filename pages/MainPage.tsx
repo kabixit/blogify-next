@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Container, Grid, Heading, Image, Text } from '@chakra-ui/react';
 import NavBar from './components/NavBar';
-import { db } from '../firebase'; // Import the Firestore database configuration
+import { db } from '../firebase'; 
 import { collection, getDocs } from 'firebase/firestore';
 import { useRouter } from 'next/router';
 
