@@ -25,7 +25,7 @@ const Login = () => {
   };
 
   const navigateToSignUp = () => {
-    router.push('/SignUp'); // Navigate to the signup page
+    router.push('/SignUp'); // Navigate to the signup pag
   };
 
   return (
